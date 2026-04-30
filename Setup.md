@@ -69,9 +69,8 @@ where:
 | Intermediate dependence | $(0, 1)$ |
 
 **Rate of convergence:**
-$$\widehat{\mathrm{II}}_n \to \mathrm{II} \quad \text{at rate} \quad n^{-\min\{1/2,\; 1/d_X\}}\,(\log n)^{d_X + 1 + \beta}$$
 
-where $d_X$ is the dimension of $X$ and $\beta$ is as in Assumption A1 of Azadkia and Chatterjee (2021). For $d_X = 1$, the DKW-dominated rate is $n^{-1/2}$; for $d_X \geq 3$ the NN-dominated rate $n^{-1/d_X}$ is slower.
+_to be calculated_
 
 ---
 
