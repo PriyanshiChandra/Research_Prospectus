@@ -57,7 +57,7 @@ $$\mathrm{II}(X \to Y) = 2\, P_{\tilde{Y}, Y_1, Y'_1, X_1}\left(\|Y_1 - Y'_1\| \
 
 where:
 - $\tilde{Y} \sim f_Y$ — marginal distribution of $Y$, independent of $X$
-- $Y_1,\, Y'_1 \overset{\mathrm{iid}}{\sim} f_{Y|X=X_1}$ — two independent copies from the conditional, tied to the same $X_1$
+- $Y_1, Y_1' \overset{\mathrm{iid}}{\sim} f_{Y|X=X_1}$ — two independent copies from the conditional, tied to the same $X_1$
 - $X_1 \sim f_X$ — marginal of $X$
 
 **Known limiting values:**
