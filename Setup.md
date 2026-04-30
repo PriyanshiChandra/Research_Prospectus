@@ -53,7 +53,7 @@ $$\widehat{\mathrm{II}}_n = \frac{2}{n} \sum_{i=1}^n \hat{F}_{Y_i}\left(\|y_{N_X
 
 The true population-level II is the deterministic quantity:
 
-$$\mathrm{II}(X \to Y) = 2\, P_{\tilde{Y},\, Y_1,\, Y'_1,\, X_1}\!\left(\|Y_1 - Y'_1\| \geq \|Y_1 - \tilde{Y}\|\right)$$
+$$\mathrm{II}(X \to Y) = 2\, P_{\tilde{Y}, Y_1, Y'_1, X_1}\left(\|Y_1 - Y'_1\| \geq \|Y_1 - \tilde{Y}\|\right)$$
 
 where:
 - $\tilde{Y} \sim f_Y$ — marginal distribution of $Y$, independent of $X$
