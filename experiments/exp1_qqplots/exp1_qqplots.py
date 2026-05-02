@@ -108,8 +108,8 @@ def generate_sample(
     dim_y: int,
     noise_level: float,
     rng: np.random.Generator,
-    linear_A: np.ndarray | None = None,
-) -> tuple[np.ndarray, np.ndarray]:
+    linear_A=None,  # type: Optional[np.ndarray]
+):
     """
     Generate one (X, Y) sample for the given dependency structure.
 
@@ -308,8 +308,8 @@ def load_results(results_dir: str) -> dict:
 def plot_qq_grid(
     data: dict,
     plots_dir: str,
-    n_values: list[int],
-    distributions: list[str] = PLOT_DISTRIBUTIONS,
+    n_values,  # type: List[int]
+    distributions=PLOT_DISTRIBUTIONS,  # type: List[str]
 ) -> None:
     """Experiment 3 — QQ plot grid: rows = distributions, cols = n."""
     nrows, ncols = len(distributions), len(n_values)
@@ -347,8 +347,8 @@ def plot_qq_grid(
 def plot_histogram_grid(
     data: dict,
     plots_dir: str,
-    n_values: list[int],
-    distributions: list[str] = PLOT_DISTRIBUTIONS,
+    n_values,  # type: List[int]
+    distributions=PLOT_DISTRIBUTIONS,  # type: List[str]
 ) -> None:
     """Experiment 4 — histogram grid: rows = distributions, cols = n."""
     nrows, ncols = len(distributions), len(n_values)
@@ -397,7 +397,7 @@ def plot_histogram_grid(
 def export_ks_table(
     data: dict,
     plots_dir: str,
-    n_values: list[int],
+    n_values,  # type: List[int]
 ) -> None:
     """Experiment 5 — KS test results as CSV + printed table."""
     rows = []
