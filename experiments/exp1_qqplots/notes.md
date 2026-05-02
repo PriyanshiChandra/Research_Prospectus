@@ -23,17 +23,17 @@ The purpose of this experiment is to provide **empirical evidence** that this co
 
 ## 2. The Estimator
 
-Given a sample $(x_i, y_i)_{i=1}^n$ from a joint distribution $P_{X,Y}$, the empirical II estimator is computed in three steps:
+Given a sample $(x_i, y_i)\_{i=1}^n$ from a joint distribution $P_\{X,Y}$, the empirical II estimator is computed in three steps:
 
 **Step 1 — Nearest neighbour in $X$-space:**
 
-$$N_X(i) = \arg\min_{k \neq i} \|x_k - x_i\|_2$$
+$$N_X(i) = \arg\min_{k \neq i} \lVert x_k - x_i \rVert$$
 
 For each observation $i$, find the index of the point closest to it in $X$-space (Euclidean distance, ties broken by first minimum index).
 
 **Step 2 — Rank in $Y$-space:**
 
-$$R^Y_i(N_X(i)) = \sum_{j \neq i} \mathbf{1}\left\{ \|y_{N_X(i)} - y_i\|_2 \geq \|y_j - y_i\|_2 \right\}$$
+$$R^Y_i(N_X(i)) = \sum_{j \neq i} \mathbf{1}_\left\lbrace \lVert y_{N_X(i)} - y_i \rVert \geq \lVert y_j - y_i \rVert \right\rbrace$$
 
 For each $i$, find the rank of $y_{N_X(i)}$ — the $Y$-value of $i$'s nearest $X$-neighbour — when all other $y_j$ are sorted by distance from $y_i$. A rank of 1 means the $X$-neighbour is also the $Y$-neighbour: $X$ is highly predictive of $Y$. A rank near $n$ means the $X$-neighbour lands far away in $Y$-space: $X$ carries little information about $Y$.
 
@@ -196,17 +196,7 @@ Taking the three checks together, the experiments provide strong empirical evide
 
 ---
 
-## 8. How to Cite These Results in the Dissertation
-
-When writing the empirical section, structure the argument as follows:
-
-> *We verify the CLT empirically through three complementary checks: QQ plots (visual, sensitive to tails), histograms (visual, accessible to a broad audience), and the two-sided KS test (quantitative). For each of the ten dependency structures in Table X, at each of four sample sizes $n \in \{100, 500, 1000, 5000\}$, we run $B = 1000$ independent replications, standardise the resulting II estimates using the cross-replication mean and standard deviation, and examine whether the standardised statistics $\{Z_n^{(b)}\}$ follow $\mathcal{N}(0,1)$.*
-
-> *Figure X shows QQ plots for D0 (independence), D1 (linear), and D7 (logarithmic). The diagonal alignment improves monotonically with $n$ across all distributions, confirming the CLT. The logarithmic case exhibits the slowest convergence, consistent with its compressed signal structure. Figure Y shows the corresponding histograms. Table Z reports KS statistics and $p$-values: all 40 $(n, \text{distribution})$ pairs fail to reject normality at the 5% level for $\sigma_\varepsilon = 0.1$; for $\sigma_\varepsilon = 0.5$, the single rejection at D1, $n = 100$ ($p = 0.025$) is a finite-sample effect absent at $n \geq 500$.*
-
----
-
-## 9. Files
+## 8. Files
 
 | File | Contents |
 |------|----------|
@@ -218,7 +208,7 @@ When writing the empirical section, structure the argument as follows:
 
 ---
 
-## 10. Open Questions
+## 9. Open Questions
 
 | Question | Status |
 |---|---|
