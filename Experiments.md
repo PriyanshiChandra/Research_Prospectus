@@ -18,7 +18,7 @@ Figures are saved as both `.pdf` (for LaTeX) and `.png` (for README/presentation
 
 | # | Experiment | Status | Date |
 |---|-----------|--------|------|
-| 1 | [Convergence to normality (QQ plots)](#experiment-1--convergence-to-normality-qq-plots) | ⬜ not run | — |
+| 1 | [Convergence to normality (QQ plots)](#experiment-1--convergence-to-normality-qq-plots) | ✅ complete | 2026-05-02 |
 | 2 | [Rate of convergence (variance scaling)](#experiment-2--rate-of-convergence-variance-scaling) | ⬜ not run | — |
 | 3 | [Directional asymmetry across dependence structures](#experiment-3--directional-asymmetry-across-dependence-structures) | ⬜ not run | — |
 | 4 | [Finite-sample bias](#experiment-4--finite-sample-bias) | ⬜ not run | — |
@@ -35,52 +35,136 @@ Status legend: ⬜ not run · 🔄 in progress · ✅ complete · ⚠️ issue f
 **Purpose:** Visually confirm the CLT for $\widehat{\mathrm{II}}_n$. The empirical distribution of $\sqrt{n}(\widehat{\mathrm{II}}_n - \mathrm{II})$ across replications should approach $\mathcal{N}(0, \sigma^2)$ as $n$ grows. The progression from a bent to a straight diagonal in the QQ plot is the visual proof of the theorem.
 
 **Script:** `experiments/exp1_qqplots/exp1_qqplots.py`  
-**SLURM script:** `experiments/exp1_qqplots/exp1.slurm`
+**SLURM script:** `experiments/exp1_qqplots/exp1.sh`
 
 ### Run details
 
 | Field | Value |
 |-------|-------|
-| Date | |
-| Commit hash | |
-| Cluster job ID | |
-| Wall time used | |
+| Date | 2026-05-02 |
+| Commit hash | ce8d506 |
 
 ### Data generating process
 
+All $X \sim \mathcal{N}(0, I_{d_X})$, additive noise $\varepsilon \sim \mathcal{N}(0, \sigma_\varepsilon^2 I_{d_Y})$ independent of $X$.
+
 | Parameter | Value |
 |-----------|-------|
-| Distribution | |
-| Parameters (e.g. ρ, μ, Σ) | |
-| True II value (if known) | |
-| Replications $B$ | |
-| Sample sizes $n$ | 50, 200, 500, 1000 |
-| Random seed | |
+| $d_X$ | 5 |
+| $d_Y$ | 3 |
+| Noise level $\sigma_\varepsilon$ | 0.1 , 0.5|
+| Replications $B$ | 1000 (500 for $n = 5000$) |
+| Sample sizes $n$ | 100, 500, 1000, 5000 |
+| Random seed | $42 + \text{SLURM\_ARRAY\_TASK\_ID}$ (one seed per task) |
+| $k$ (nearest neighbours) | 1 |
 
-### Results
+### Dependency structures tested
 
-| $n$ | QQ plot qualitative description |
-|-----|--------------------------------|
-| 50 | |
-| 200 | |
-| 500 | |
-| 1000 | |
+| ID | Name | $Y$ given $X$ | Expected $\mathrm{II}(X \to Y)$ |
+|----|------|----------------|----------------------------------|
+| D0 | Independent | $Y \sim \mathcal{N}(0, I_{d_Y})$, independent of $X$ | 1 (exact) |
+| D1 | Linear | $AX + \varepsilon$, $A \in \mathbb{R}^{d_X \times d_Y}$ fixed random | $\approx 0$ |
+| D2 | Quadratic | $X_k^2 + \varepsilon_k$ | $\approx 0$ |
+| D3 | Cubic | $X_k^3 + \varepsilon_k$ | $\approx 0$ |
+| D4 | Sine | $\sin(X_k) + \varepsilon_k$ | $\approx 0$ |
+| D5 | Cosine | $\cos(X_k) + \varepsilon_k$ | $\approx 0$ |
+| D6 | Exponential | $\exp(X_k/2) + \varepsilon_k$ | $\approx 0$ |
+| D7 | Logarithmic | $\log(\|X\|_2 + 1)\mathbf{1} + \varepsilon$ | $\approx 0$ (slowest convergence) |
+| D8 | Step | $\mathrm{sign}(X_k) + \varepsilon_k$ | $\approx 0$ |
+| D9 | Parabolic | $X_1^2 + X_2^2 + \varepsilon_1$; $X_k^2 + \varepsilon_k$ | $\approx 0$ |
+
+> **Implementation note:** For $d_X = d_Y = 2$, elementwise maps (D2–D6, D8) apply to the first $\min(d_X, d_Y)$ components of $X$ and tile the last column if $d_X < d_Y$.  The linear matrix $A$ is fixed across all replications, seeded deterministically from $(d_X, d_Y)$.
+
+### Standardised statistic
+
+$$Z_n^{(b)} = \frac{\widehat{\mathrm{II}}_n^{(b)} - \bar{\mathrm{II}}_n}{\widehat{\sigma}_B}, \qquad \bar{\mathrm{II}}_n = \frac{1}{B}\sum_b \widehat{\mathrm{II}}_n^{(b)}, \quad \widehat{\sigma}_B = \mathrm{std}(\{\widehat{\mathrm{II}}_n^{(b)}\})$$
+
+### Results — Run A: $\sigma_\varepsilon = 0.1$, $d_X = 5$, $d_Y = 3$
+
+#### Exp 3 — QQ plots
+
+| Distribution | $n = 100$ | $n = 500$ | $n = 1000$ | $n = 5000$ |
+|---|---|---|---|---|
+| D0 Independent | Near-straight; mild tail wiggles | Straight | Straight | Straight |
+| D1 Linear | Slight S-curve in tails | Near-straight | Straight | Straight |
+| D7 Logarithmic | Mild S-curve | Near-straight | Straight | Straight |
+
+Diagonal alignment improves monotonically with $n$. D7 (logarithmic) is the slowest to converge, as predicted by Setup.md.
+
+#### Exp 5 — KS test
+
+All 40 pairs fail to reject $H_0$ at the 5% level.
+
+| Distribution | $n=100$ KS / $p$ | $n=500$ KS / $p$ | $n=1000$ KS / $p$ | $n=5000$ KS / $p$ |
+|---|---|---|---|---|
+| D0 Independent  | 0.0230 / 0.656 | 0.0149 / 0.978 | 0.0199 / 0.815 | 0.0135 / 1.000 |
+| D1 Linear       | 0.0262 / 0.491 | 0.0307 / 0.298 | 0.0192 / 0.846 | 0.0209 / 0.978 |
+| D2 Quadratic    | 0.0296 / 0.337 | 0.0210 / 0.760 | 0.0186 / 0.872 | 0.0297 / 0.760 |
+| D3 Cubic        | 0.0413 / 0.064 | 0.0157 / 0.963 | 0.0310 / 0.286 | 0.0230 / 0.949 |
+| D4 Sine         | 0.0272 / 0.442 | 0.0412 / 0.065 | 0.0296 / 0.340 | 0.0307 / 0.723 |
+| D5 Cosine       | 0.0157 / 0.962 | 0.0230 / 0.658 | 0.0248 / 0.559 | 0.0289 / 0.785 |
+| D6 Exponential  | 0.0248 / 0.561 | 0.0321 / 0.250 | 0.0152 / 0.973 | 0.0184 / 0.995 |
+| D7 Logarithmic  | 0.0199 / 0.815 | 0.0158 / 0.962 | 0.0173 / 0.920 | 0.0332 / 0.629 |
+| D8 Step         | 0.0226 / 0.680 | 0.0272 / 0.444 | 0.0266 / 0.473 | 0.0332 / 0.629 |
+| D9 Parabolic    | 0.0224 / 0.689 | 0.0179 / 0.900 | 0.0257 / 0.515 | 0.0396 / 0.404 |
 
 **Observations:**
+- D0: $p \to 1$ rapidly — normality essentially exact at large $n$.
+- D3 cubic at $n=100$: $p = 0.064$, the closest to rejection in this run — finite-sample effect worth one sentence.
+- D1 linear: $\widehat{\mathrm{II}}_n$ mean decays 0.119 → 0.017 as $n$ grows, confirming the estimator tracks the true value.
+- D7 logarithmic: $\widehat{\mathrm{II}}_n$ mean decays slowly (0.702 → 0.443), confirming sluggish convergence.
 
-<!-- 
-What does the progression look like? 
-At what n does the plot look convincingly straight?
-Any asymmetry in the tails? Any outliers?
--->
+---
+
+### Results — Run B: $\sigma_\varepsilon = 0.5$, $d_X = 5$, $d_Y = 3$
+
+Higher noise weakens all functional signals, pushing $\widehat{\mathrm{II}}_n$ toward 1 (independence). Same grid geometry (10 distributions × 4 sample sizes, $B = 1000$).
+
+#### Exp 3 — QQ plots
+
+QQ plots look qualitatively similar to Run A. Diagonal alignment improves with $n$ across all distributions. No new pathological behaviour introduced by higher noise.
+
+#### Exp 5 — KS test
+
+| Distribution | $n=100$ KS / $p$ | $n=500$ KS / $p$ | $n=1000$ KS / $p$ | $n=5000$ KS / $p$ |
+|---|---|---|---|---|
+| D0 Independent  | 0.0230 / 0.656 | 0.0149 / 0.978 | 0.0199 / 0.815 | 0.0135 / 1.000 |
+| D1 Linear       | 0.0467 / **0.025** ⚠️ | 0.0332 / 0.215 | 0.0215 / 0.737 | 0.0352 / 0.555 |
+| D2 Quadratic    | 0.0143 / 0.985 | 0.0164 / 0.947 | 0.0168 / 0.936 | 0.0265 / 0.866 |
+| D3 Cubic        | 0.0374 / 0.119 | 0.0177 / 0.908 | 0.0163 / 0.948 | 0.0277 / 0.828 |
+| D4 Sine         | 0.0225 / 0.681 | 0.0186 / 0.872 | 0.0169 / 0.933 | 0.0246 / 0.914 |
+| D5 Cosine       | 0.0191 / 0.850 | 0.0239 / 0.609 | 0.0239 / 0.607 | 0.0261 / 0.876 |
+| D6 Exponential  | 0.0234 / 0.637 | 0.0104 / 1.000 | 0.0190 / 0.856 | 0.0293 / 0.774 |
+| D7 Logarithmic  | 0.0181 / 0.891 | 0.0211 / 0.757 | 0.0183 / 0.887 | 0.0334 / 0.620 |
+| D8 Step         | 0.0203 / 0.796 | 0.0260 / 0.502 | 0.0234 / 0.636 | 0.0264 / 0.868 |
+| D9 Parabolic    | 0.0306 / 0.302 | 0.0258 / 0.511 | 0.0307 / 0.295 | 0.0305 / 0.727 |
+
+**Observations:**
+- **D1 linear at $n=100$: $p = 0.025$ — the only rejection across both runs.** With $\sigma_\varepsilon = 0.5$ the signal-to-noise ratio is much lower, making the finite-sample distribution harder to approximate. Normality is recovered by $n = 500$ ($p = 0.215$).
+- D0 (independent): identical to Run A — as expected, since $Y$ is generated independently of $X$ regardless of $\sigma_\varepsilon$.
+- D7 logarithmic: $\widehat{\mathrm{II}}_n$ mean is now 0.889–0.928 across $n$, barely moving — the log signal is almost entirely masked by noise at $\sigma_\varepsilon = 0.5$. The estimator is essentially measuring near-independence.
+- All other distributions: $\widehat{\mathrm{II}}_n$ means are uniformly higher than in Run A (noise masks the functional relationships), but normality still holds.
+
+---
 
 ### Output files
 
-- `experiments/exp1_qqplots/results/`
+| File | Description |
+|------|-------------|
+| `experiments/exp1_qqplots/plots_noise0-1/exp3_qq_plots.pdf` | QQ plots — Run A ($\sigma_\varepsilon = 0.1$) |
+| `experiments/exp1_qqplots/plots_noise0-1/exp4_histograms.pdf` | Histograms — Run A ($\sigma_\varepsilon = 0.1$) |
+| `experiments/exp1_qqplots/plots_noise0-1/exp5_ks_table.csv` | KS table — Run A |
+| `experiments/exp1_qqplots/plots_noise0-5/exp3_qq_plots.pdf` | QQ plots — Run B ($\sigma_\varepsilon = 0.5$) |
+| `experiments/exp1_qqplots/plots_noise0-5/exp4_histograms.pdf` | Histograms — Run B ($\sigma_\varepsilon = 0.5$) |
+| `experiments/exp1_qqplots/plots_noise0-5/exp5_ks_table.csv` | KS table — Run B |
+| `experiments/exp1_qqplots/results/*.pkl` | Raw II values and $Z_n$ — Run A |
 
 ### Flags / follow-up
 
-<!-- Anything unexpected? Anything to revisit in another experiment? -->
+- **D1 linear, $\sigma_\varepsilon = 0.5$, $n=100$**: single rejection ($p=0.025$) — re-run at $B=2000$ to determine if this is a genuine finite-sample effect or Monte Carlo noise.
+- D3 cubic at $n=100$ in Run A ($p=0.064$): borderline — monitor in future runs.
+- D7 logarithmic with high noise: $\widehat{\mathrm{II}}_n \approx 0.9$ even at $n=5000$ — the log signal is effectively undetectable at $\sigma_\varepsilon=0.5$. Consider whether this regime is worth including in the final document.
+- Variance estimation uses cross-replication $\widehat{\sigma}_B$ — single-sample bootstrap estimator is planned future work (see Setup.md §9).
 
 ---
 

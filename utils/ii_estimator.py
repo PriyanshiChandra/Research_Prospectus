@@ -18,6 +18,7 @@ References:
 
 import numpy as np
 from scipy.spatial import cKDTree
+from scipy.spatial.distance import cdist
 
 
 def _rank_distances(source: np.ndarray, k: int) -> np.ndarray:
@@ -99,11 +100,59 @@ def compute_ii(
     return float(ii)
 
 
+def compute_ii_vectorized(
+    X: np.ndarray,
+    Y: np.ndarray,
+    k: int = 1,
+) -> float:
+    """
+    Vectorized II estimator — use this in batch/MC experiments instead of compute_ii.
+
+    Implements Setup.md Step 1-3 exactly:
+        II_hat = (2 / n^2) * sum_i  R^Y_i(N_X(i))
+        R^Y_i  = #{j != i : ||y_j - y_i|| <= ||y_{N_X(i)} - y_i||}
+
+    Avoids the per-point inner loop in compute_ii and removes the dead
+    tree_Y.query call, reducing per-replication cost from O(n^2 log n)
+    to O(n^2 * d_Y).  Peak memory: one (n, n) float64 distance matrix
+    (~200 MB at n=5000).
+
+    Parameters
+    ----------
+    X : (n, d_X)
+    Y : (n, d_Y)
+    k : nearest-neighbour order (default 1)
+
+    Returns
+    -------
+    ii : float in [0, 1]
+    """
+    X = np.atleast_2d(X) if X.ndim == 1 else X
+    Y = np.atleast_2d(Y) if Y.ndim == 1 else Y
+    n = X.shape[0]
+    assert Y.shape[0] == n, "X and Y must have the same number of rows."
+
+    # Step 1 — 1-NN in X-space (k+1 to skip self at index 0)
+    tree_X = cKDTree(X)
+    _, indices = tree_X.query(X, k=k + 1)
+    nn_idx = indices[:, 1]                          # (n,)
+
+    # Step 2 — distance from each point to its X-NN in Y-space
+    d_nn = np.linalg.norm(Y[nn_idx] - Y, axis=1)   # (n,)
+
+    # Step 3 — full pairwise Y-distances; count ranks
+    D_Y = cdist(Y, Y, metric='euclidean')           # (n, n)
+    np.fill_diagonal(D_Y, np.inf)                   # exclude self
+
+    ranks = np.sum(D_Y <= d_nn[:, None], axis=1)    # (n,)
+    return 2.0 / n ** 2 * float(np.sum(ranks))
+
+
 def compute_ii_both_directions(
     X: np.ndarray,
     Y: np.ndarray,
     k: int = 1,
-) -> tuple[float, float]:
+) -> tuple:
     """
     Compute II(X->Y) and II(Y->X) in one call.
 
