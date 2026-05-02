@@ -9,7 +9,7 @@
 #   n_idx    = TASK_ID / 10   →  which sample size (100, 500, 1000, 5000)
 #
 # Submit from experiments/exp1_qqplots/:
-#   sbatch exp1.slurm
+#   sbatch exp1.sh
 # =============================================================================
 
 #SBATCH --job-name=ii_normality

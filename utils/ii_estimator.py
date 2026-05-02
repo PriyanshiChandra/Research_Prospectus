@@ -86,8 +86,8 @@ def compute_ii(
         nn_idx = knn_in_X[i, 0]  # using k=1: single nearest neighbour
 
         # Rank of nn_idx when points are sorted by distance from i in Y-space
-        # i.e. what rank does the X-neighbour get in Y?
-        distances_from_i_in_Y, _ = tree_Y.query(Y[i], k=n)
+        # # i.e. what rank does the X-neighbour get in Y?
+        # distances_from_i_in_Y, _ = tree_Y.query(Y[i], k=n)
         # distances_from_i_in_Y is sorted; find where nn_idx lands
         # re-query: get rank of Y[nn_idx] from Y[i]
         dist_to_nn_in_Y = np.linalg.norm(Y[i] - Y[nn_idx])
@@ -160,4 +160,4 @@ def compute_ii_both_directions(
     -------
     (ii_xy, ii_yx) : tuple of floats
     """
-    return compute_ii(X, Y, k=k), compute_ii(Y, X, k=k)
+    return compute_ii_vectorized(X, Y, k=k), compute_ii_vectorized(Y, X, k=k)
