@@ -110,7 +110,7 @@ For the linear case, the matrix $A$ is fixed across all replications (seeded fro
 | $\sigma_\varepsilon$ | 0.1 | 0.5 | Low vs. high noise — tests robustness of CLT to SNR |
 | $n$ | 100, 500, 1000, 5000 | same | Covers small through large sample regimes |
 | $B$ | 1000 (500 for $n=5000$) | same | Large enough to estimate the distribution of $Z_n$ well |
-| Seed | $42 + \text{task\_id}$ | same | One independent seed per (dist, $n$) pair |
+| Seed | $42 +$ `task_id` | same | One independent seed per (dist, $n$) pair |
 
 The choice of two noise levels is deliberate: with $\sigma_\varepsilon = 0.1$ the signal is strong and II values are close to 0 for functional cases, whereas with $\sigma_\varepsilon = 0.5$ the signal is weaker and II values are pushed toward 1 (the independence value). This tests whether the CLT holds throughout the parameter space, not just in the favourable low-noise regime.
 
