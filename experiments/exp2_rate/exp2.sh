@@ -21,7 +21,7 @@
 #SBATCH --output=logs/ii_rate_%A_%a.out
 #SBATCH --error=logs/ii_rate_%A_%a.err
 #SBATCH --array=0-239
-#SBATCH --time=03:00:00
+#SBATCH --time=05:00:00
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=1
 
@@ -58,8 +58,8 @@ relationship_types=(
     "step"
     "parabolic"
 )
-n_values=(100 500 1000 5000)
-dx_values=(1 2 5)
+n_values=(100 1000 5000 10000)
+dx_values=(2 5 10)
 noise_values=(0.1 0.5)
 
 n_rel=${#relationship_types[@]}   # 10
@@ -80,8 +80,12 @@ n_samples=${n_values[$n_idx]}
 dim_x=${dx_values[$dx_idx]}
 noise=${noise_values[$noise_idx]}
 
-# B = 1000 for all sizes (rate experiment needs stable variance estimates)
-n_simulations=1000
+# B = 1000 for n <= 5000; 500 for n = 10000 (keeps wall time < 5 h)
+if [ "$n_samples" -le 5000 ]; then
+    n_simulations=1000
+else
+    n_simulations=500
+fi
 
 # Noise label for filenames (0.1 -> 0-1, 0.5 -> 0-5)
 noise_label=$(echo "$noise" | tr '.' '-')

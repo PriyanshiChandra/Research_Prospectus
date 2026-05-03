@@ -278,6 +278,7 @@ def plot_n_times_var(rows,         # type: list
     if ncols == 1:
         axes = [axes]
 
+    handles, labels = [], []
     for col, dx in enumerate(dx_values):
         ax = axes[col]
         for ci, dist in enumerate(DISTRIBUTIONS):
@@ -286,27 +287,35 @@ def plot_n_times_var(rows,         # type: list
                 continue
             ns = sorted(data[key].keys())
             nv = [data[key][n]["n_times_var"] for n in ns]
-            ax.plot(ns, nv, marker="o", ms=5, lw=1.5,
-                    color=COLOURS[ci], label=DIST_LABELS[dist])
+            line, = ax.plot(ns, nv, marker="o", ms=6, lw=2.0,
+                            color=COLOURS[ci], label=DIST_LABELS[dist])
+            if col == 0:
+                handles.append(line)
+                labels.append(DIST_LABELS[dist])
 
         ax.axhline(0, color="black", lw=0.5, ls=":")
-        ax.set_title(f"$d_X = {dx}$", fontsize=11)
-        ax.set_xlabel("$n$", fontsize=10)
+        ax.set_title(f"$d_X = {dx}$", fontsize=13, fontweight="bold")
+        ax.set_xlabel("$n$", fontsize=12, fontweight="bold")
         ax.set_ylabel("$n \\cdot \\widehat{{\\mathrm{{Var}}}}(\\widehat{{\\mathrm{{II}}}}_n)$",
-                      fontsize=10)
+                      fontsize=12, fontweight="bold")
         ax.set_xscale("log")
         ax.grid(alpha=0.25)
-        ax.tick_params(labelsize=8)
-        if col == ncols - 1:
-            ax.legend(fontsize=7, loc="upper right", framealpha=0.85)
+        ax.tick_params(labelsize=10)
 
     fig.suptitle(
         f"Exp 2 — $n \\cdot \\widehat{{\\mathrm{{Var}}}}(\\widehat{{\\mathrm{{II}}}}_n)$ vs $n$"
         f"  ($\\sigma_\\varepsilon = {noise_level}$)\n"
         "Flat line confirms $\\sqrt{{n}}$ convergence rate",
-        fontsize=12,
+        fontsize=15, fontweight="bold",
     )
-    plt.tight_layout(rect=[0, 0, 1, 0.93])
+    fig.legend(handles, labels,
+               loc="center right",
+               bbox_to_anchor=(1.0, 0.5),
+               fontsize=10,
+               framealpha=0.9,
+               title="Distribution",
+               title_fontsize=10)
+    plt.tight_layout(rect=[0, 0, 0.82, 0.93])
     os.makedirs(plots_dir, exist_ok=True)
     for ext in ("pdf", "png"):
         out = os.path.join(plots_dir, f"exp2_n_times_var_noise{noise_label}.{ext}")
@@ -323,9 +332,11 @@ def plot_var_vs_inv_n(rows,         # type: list
                       ):
     # type: (...) -> None
     """
-    Plot B: Var_hat(II_hat_n) vs 1/n.
-    Linear relationship confirms sqrt(n) rate.
-    Slope of fitted line = sigma^2 estimate.
+    Plot B: Var_hat(II_hat_n) vs 1/n on log-log axes.
+    Log-log scale ensures all n values are visible even when they span
+    orders of magnitude (e.g. n=100 at 1/n=0.01 vs n=10000 at 1/n=0.0001).
+    A slope of +1 on log-log confirms the 1/n rate.
+    Slope of linear fit on the original (non-log) scale estimates sigma^2.
     """
     data = _pivot(rows, noise_level)
     noise_label = str(noise_level).replace(".", "-")
@@ -335,8 +346,16 @@ def plot_var_vs_inv_n(rows,         # type: list
     if ncols == 1:
         axes = [axes]
 
+    handles, labels = [], []
+    ref_handle = None
+
     for col, dx in enumerate(dx_values):
         ax = axes[col]
+
+        # Collect all (invn, var) pairs for this panel to position reference line
+        all_invn = []
+        all_vrs  = []
+
         for ci, dist in enumerate(DISTRIBUTIONS):
             key = (dist, dx)
             if key not in data:
@@ -344,31 +363,65 @@ def plot_var_vs_inv_n(rows,         # type: list
             ns   = sorted(data[key].keys())
             invn = [1.0 / n for n in ns]
             vrs  = [data[key][n]["emp_var"] for n in ns]
-            ax.plot(invn, vrs, marker="o", ms=5, lw=1.5,
-                    color=COLOURS[ci], label=DIST_LABELS[dist])
-            # fitted line
+            all_invn.extend(invn)
+            all_vrs.extend(vrs)
+            line, = ax.plot(invn, vrs, marker="o", ms=6, lw=2.0,
+                            color=COLOURS[ci], label=DIST_LABELS[dist])
+            if col == 0:
+                handles.append(line)
+                labels.append(DIST_LABELS[dist])
+            # fitted line through origin: sigma2 = sum(invn*var) / sum(invn^2)
             if len(invn) >= 2:
-                slope, intercept, *_ = linregress(invn, vrs)
-                x_fit = np.linspace(0, max(invn) * 1.05, 100)
-                ax.plot(x_fit, slope * x_fit + intercept,
+                invn_arr = np.array(invn)
+                vrs_arr  = np.array(vrs)
+                sigma2   = float(np.dot(invn_arr, vrs_arr) / np.dot(invn_arr, invn_arr))
+                x_fit = np.geomspace(min(invn) * 0.8, max(invn) * 1.25, 200)
+                ax.plot(x_fit, sigma2 * x_fit,
                         color=COLOURS[ci], lw=0.8, ls="--", alpha=0.6)
 
-        ax.set_title(f"$d_X = {dx}$", fontsize=11)
-        ax.set_xlabel("$1/n$", fontsize=10)
-        ax.set_ylabel("$\\widehat{{\\mathrm{{Var}}}}(\\widehat{{\\mathrm{{II}}}}_n)$",
-                      fontsize=10)
-        ax.grid(alpha=0.25)
-        ax.tick_params(labelsize=8)
-        if col == ncols - 1:
-            ax.legend(fontsize=7, loc="upper left", framealpha=0.85)
+        # Reference line: Var = sigma2_ref * (1/n), slope=1 on log-log.
+        # sigma2_ref = geometric mean of n*Var across all (dist, n) in this panel.
+        if all_invn:
+            log_invn = np.log(all_invn)
+            log_vrs  = np.log(all_vrs)
+            log_sigma2_ref = float(np.mean(log_vrs) - np.mean(log_invn))
+            sigma2_ref = np.exp(log_sigma2_ref)
+            x_ref = np.geomspace(min(all_invn) * 0.8, max(all_invn) * 1.25, 200)
+            ref_line, = ax.plot(x_ref, sigma2_ref * x_ref,
+                                color="black", lw=1.8, ls=":", alpha=0.8,
+                                label=f"slope=1, $\\hat{{\\sigma}}^2={sigma2_ref:.3f}$")
+            if col == 0:
+                ref_handle = (ref_line,
+                              f"slope=1 ref. ($\\hat{{\\sigma}}^2={sigma2_ref:.3f}$)")
+
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_title(f"$d_X = {dx}$", fontsize=13, fontweight="bold")
+        ax.set_xlabel("$1/n$  (log scale)", fontsize=12, fontweight="bold")
+        ax.set_ylabel("$\\widehat{{\\mathrm{{Var}}}}(\\widehat{{\\mathrm{{II}}}}_n)$  (log scale)",
+                      fontsize=12, fontweight="bold")
+        ax.grid(alpha=0.25, which="both")
+        ax.tick_params(labelsize=10)
+
+    # Place legend outside to the right; add reference line entry at the top
+    if ref_handle:
+        handles = [ref_handle[0]] + handles
+        labels  = [ref_handle[1]] + labels
+    fig.legend(handles, labels,
+               loc="center right",
+               bbox_to_anchor=(1.0, 0.5),
+               fontsize=10,
+               framealpha=0.9,
+               title="Distribution",
+               title_fontsize=10)
 
     fig.suptitle(
         f"Exp 2 — $\\widehat{{\\mathrm{{Var}}}}(\\widehat{{\\mathrm{{II}}}}_n)$ vs $1/n$"
-        f"  ($\\sigma_\\varepsilon = {noise_level}$)\n"
-        "Linear fit (dashed) — slope estimates $\\sigma^2$",
-        fontsize=12,
+        f"  ($\\sigma_\\varepsilon = {noise_level}$, log-log axes)\n"
+        "Slope $\\approx +1$ confirms $1/n$ rate; dashed = per-dist. fit",
+        fontsize=15, fontweight="bold",
     )
-    plt.tight_layout(rect=[0, 0, 1, 0.93])
+    plt.tight_layout(rect=[0, 0, 0.82, 0.93])
     os.makedirs(plots_dir, exist_ok=True)
     for ext in ("pdf", "png"):
         out = os.path.join(plots_dir, f"exp2_var_vs_invn_noise{noise_label}.{ext}")
@@ -403,14 +456,18 @@ def export_sigma2_table(rows,       # type: list
                     continue
                 invn = np.array([1.0 / n for n in ns])
                 vrs  = np.array([data[key][n]["emp_var"] for n in ns])
-                slope, intercept, r_val, *_ = linregress(invn, vrs)
+                # Force zero intercept: sigma2 = sum(invn*var) / sum(invn^2)
+                sigma2 = float(np.dot(invn, vrs) / np.dot(invn, invn))
+                # R^2 relative to the no-intercept model
+                ss_res = float(np.sum((vrs - sigma2 * invn) ** 2))
+                ss_tot = float(np.sum(vrs ** 2))
+                r2_noint = 1.0 - ss_res / ss_tot if ss_tot > 0 else float("nan")
                 table_rows.append({
                     "Distribution":  DIST_LABELS[dist],
                     "d_X":           dx,
                     "noise":         noise,
-                    "sigma2_est":    round(slope, 6),
-                    "intercept":     round(intercept, 6),
-                    "R2":            round(r_val ** 2, 4),
+                    "sigma2_est":    round(sigma2, 6),
+                    "R2_noint":      round(r2_noint, 4),
                     "n_times_var_mean": round(
                         float(np.mean([data[key][n]["n_times_var"] for n in ns])), 4
                     ),
@@ -427,7 +484,7 @@ def export_sigma2_table(rows,       # type: list
     out_tex = os.path.join(plots_dir, "exp2_sigma2_table.tex")
     with open(out_tex, "w") as fh:
         fh.write("% Exp 2 — Estimated asymptotic variance sigma^2\n")
-        fh.write("% sigma2_est = slope of Var_hat vs 1/n linear fit\n\n")
+        fh.write("% sigma2_est = slope of Var_hat vs 1/n fit forced through origin\n\n")
         fh.write(df.to_latex(index=False, float_format="%.6f"))
     print(f"Saved: {out_tex}")
 
