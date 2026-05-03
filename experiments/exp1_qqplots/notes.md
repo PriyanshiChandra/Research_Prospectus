@@ -52,7 +52,7 @@ The factor $2/n^2$ normalises so that $\widehat{\mathrm{II}}_n \in (0, 1)$ appro
 
 ## 3. The Standardised Statistic
 
-A key practical challenge is that the asymptotic variance $\sigma^2 = n \cdot \mathrm{Var}(\widehat{\mathrm{II}}_n)$ has **no known closed form**. It depends on the joint distribution $F_{X,Y}$ in a complex way. Deriving it analytically is listed as open work in Setup.md §9.
+A key practical challenge is that the asymptotic variance $\sigma^2 = n \cdot \mathrm{Var}(\widehat{\mathrm{II}}\_n)$ has **no known closed form**. It depends on the joint distribution $F\_{X,Y}$ in a complex way. Deriving it analytically is listed as open work in Setup.md §9.
 
 In the experiments, we bypass this by using the **empirical variance across Monte Carlo replications** as a proxy. Concretely, for each fixed $(n, \text{distribution})$ pair we run $B$ independent replications, each producing a fresh sample of size $n$ and a corresponding estimate $\widehat{\mathrm{II}}_n^{(b)}$. We then form:
 
@@ -137,7 +137,7 @@ The choice of two noise levels is deliberate: with $\sigma_\varepsilon = 0.1$ th
 
 ### 5.2 Experiment 4 — Histograms
 
-**What it is:** A histogram of $\{Z_n^{(b)}\}_{b=1}^B$ overlaid with the $\mathcal{N}(0,1)$ density curve. Arranged in a grid: rows are distributions, columns are sample sizes.
+**What it is:** A histogram of $\{Z_n^{(b)}\}\_{b=1}^B$ overlaid with the $\mathcal{N}(0,1)$ density curve. Arranged in a grid: rows are distributions, columns are sample sizes.
 
 **How to read it:**
 - The histogram should increasingly hug the red $\mathcal{N}(0,1)$ curve as $n$ grows.
@@ -150,19 +150,19 @@ The choice of two noise levels is deliberate: with $\sigma_\varepsilon = 0.1$ th
 
 ### 5.3 Experiment 5 — Kolmogorov-Smirnov Test
 
-**What it is:** The two-sided KS test compares the empirical CDF of $\{Z_n^{(b)}\}$ against the $\mathcal{N}(0,1)$ CDF. The test statistic is:
+**What it is:** The two-sided KS test compares the empirical CDF of $\{Z\_n^{(b)}\}$ against the $\mathcal{N}(0,1)$ CDF. The test statistic is:
 
-$$D_n = \sup_z \left| F_n(z) - \Phi(z) \right|$$
+$$D\_n = \sup\_z \left| F\_n(z) - \Phi(z) \right|$$
 
-where $F_n$ is the empirical CDF of the $B$ standardised statistics and $\Phi$ is the standard normal CDF. Under $H_0: Z_n \sim \mathcal{N}(0,1)$, $D_n \sqrt{B} \xrightarrow{d} \mathcal{K}$ where $\mathcal{K}$ denotes the Kolmogorov distribution. A large $p$-value means we fail to reject normality.
+where $F_n$ is the empirical CDF of the $B$ standardised statistics and $\Phi$ is the standard normal CDF. Under $H_0: Z_n \sim \mathcal{N}(0,1)$, $D_n \sqrt{B} \xrightarrow{d} $ Kolmogorov distribution. A large $p$-value means we fail to reject normality.
 
 **Why include a formal test:** QQ plots and histograms are visual and subject to interpretation. The KS test gives a single number — the $p$-value — that is objective, reproducible, and directly citable. In the dissertation you can write: "At every $(n, \text{distribution})$ combination tested, the KS test failed to reject normality at the 5% level" and point to Table X.
 
 **What we observed — Run A ($\sigma_\varepsilon = 0.1$):**  
-All 40 pairs failed to reject $H_0$. The closest to rejection was D3 cubic at $n = 100$ ($p = 0.064$). $p$-values increase toward 1 as $n$ grows for all distributions, confirming the CLT.
+All 40 pairs failed to reject $H\_0$. The closest to rejection was D3 cubic at $n = 100$ ($p = 0.064$). $p$-values increase toward 1 as $n$ grows for all distributions, confirming the CLT.
 
 **What we observed — Run B ($\sigma_\varepsilon = 0.5$):**  
-39 out of 40 pairs failed to reject $H_0$. The one rejection was D1 linear at $n = 100$ ($p = 0.025$). With higher noise, the signal-to-noise ratio for the linear relationship drops substantially, and the finite-sample distribution of $\widehat{\mathrm{II}}_n$ is harder to approximate at small $n$. By $n = 500$ ($p = 0.215$) normality is recovered. This is a finite-sample effect, not a failure of the CLT.
+39 out of 40 pairs failed to reject $H\_0$. The one rejection was D1 linear at $n = 100$ ($p = 0.025$). With higher noise, the signal-to-noise ratio for the linear relationship drops substantially, and the finite-sample distribution of $\widehat{\mathrm{II}}\_n$ is harder to approximate at small $n$. By $n = 500$ ($p = 0.215$) normality is recovered. This is a finite-sample effect, not a failure of the CLT.
 
 ---
 
@@ -170,7 +170,7 @@ All 40 pairs failed to reject $H_0$. The closest to rejection was D3 cubic at $n
 
 Taking the three checks together, the experiments provide strong empirical evidence for the following claims:
 
-1. **The CLT holds across dependency structures.** From the trivial (independence) to the highly nonlinear (parabolic, logarithmic), the standardised statistic $Z_n$ converges to $\mathcal{N}(0,1)$ as $n$ grows. No pathological cases were found.
+1. **The CLT holds across dependency structures.** From the trivial (independence) to the highly nonlinear (parabolic, logarithmic), the standardised statistic $Z\_n$ converges to $\mathcal{N}(0,1)$ as $n$ grows. No pathological cases were found.
 
 2. **The CLT holds across noise levels.** With both $\sigma_\varepsilon = 0.1$ and $\sigma_\varepsilon = 0.5$, normality is established by $n = 500$ in all but one case. The single rejection (D1 linear, $\sigma_\varepsilon = 0.5$, $n = 100$) is a finite-sample effect that disappears at larger $n$.
 

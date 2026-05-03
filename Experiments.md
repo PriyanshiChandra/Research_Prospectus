@@ -55,7 +55,7 @@ All $X \sim \mathcal{N}(0, I_{d_X})$, additive noise $\varepsilon \sim \mathcal{
 | Noise level $\sigma_\varepsilon$ | 0.1 , 0.5|
 | Replications $B$ | 1000 (500 for $n = 5000$) |
 | Sample sizes $n$ | 100, 500, 1000, 5000 |
-| Random seed | $42 + \text{SLURM\_ARRAY\_TASK\_ID}$ (one seed per task) |
+| Random seed | $42$ + `SLURM_ARRAY_TASK_ID` (one seed per task) |
 | $k$ (nearest neighbours) | 1 |
 
 ### Dependency structures tested
