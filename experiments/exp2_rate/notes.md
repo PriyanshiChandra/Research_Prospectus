@@ -22,7 +22,7 @@ Two complementary plots are produced for each noise level.
 
 ### Plot A — $n \cdot \widehat{\mathrm{Var}}(\widehat{\mathrm{II}}_n)$ vs $n$
 
-If $\mathrm{Var}(\widehat{\mathrm{II}}\_n) = \sigma^2/n + o(1/n)$, then $n \cdot \mathrm{Var}(\widehat{\mathrm{II}}\_n) \to \sigma^2$. The plot should show **flat horizontal traces** at each distribution's $\sigma^2$ level. A declining trend indicates the asymptotic regime has not been reached; an increasing trend would suggest super-$\sqrt{n}$ convergence.
+If $\mathrm{Var}(\widehat{\mathrm{II}}\_n) = \sigma^2/n + o(1/n)$, then $n \cdot \mathrm{Var}(\widehat{\mathrm{II}}\_n) \to \sigma^2$. The plot should show **flat horizontal traces** at each distribution's $\sigma^2$ level. A declining trend indicates the asymptotic regime has not been reached; an increasing trend would suggest super - $\sqrt{n}$ convergence.
 
 ### Plot B — $\widehat{\mathrm{Var}}(\widehat{\mathrm{II}}_n)$ vs $1/n$
 
@@ -88,7 +88,7 @@ Even the lowest $R^2$ in the table (D1 Linear, $d_X=5$: 0.9848) indicates an exc
 | D9 Parabolic | 0.095 | 0.021 | 0.148 |
 
 **Key observations:**
-- D0 (independent) has $\hat{\sigma}^2 \approx 0.40$–$0.43$ regardless of $d_X$ — consistent with its distribution-free limiting variance when $\mathrm{II} = 1$.
+- D0 (independent) has $\hat{\sigma}^2 \approx 0.40$ – $0.43$ regardless of $d_X$ — consistent with its distribution-free limiting variance when $\mathrm{II} = 1$.
 - D1 (linear) has the smallest $\hat{\sigma}^2$ (as low as 0.002 at $d_X=2$) — a strong, clean signal yields a very stable estimator.
 - D7 (logarithmic) shows a pronounced increase with $d_X$ (0.078 → 0.319). The log signal grows more slowly with dimension than the Euclidean norm, making the rank structure harder to resolve at higher $d_X$.
 - D5 (cosine) has consistently high $\hat{\sigma}^2$ — the oscillatory structure creates ambiguous near-equidistant points, inflating variance.
