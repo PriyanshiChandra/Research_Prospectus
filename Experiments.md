@@ -19,7 +19,7 @@ Figures are saved as both `.pdf` (for LaTeX) and `.png` (for README/presentation
 | # | Experiment | Status | Date |
 |---|-----------|--------|------|
 | 1 | [Convergence to normality (QQ plots)](#experiment-1--convergence-to-normality-qq-plots) | ✅ complete | 2026-05-02 |
-| 2 | [Rate of convergence (variance scaling)](#experiment-2--rate-of-convergence-variance-scaling) | ⬜ not run | — |
+| 2 | [Rate of convergence (variance scaling)](#experiment-2--rate-of-convergence-variance-scaling) | ✅ complete | 2026-05-03 |
 | 3 | [Directional asymmetry across dependence structures](#experiment-3--directional-asymmetry-across-dependence-structures) | ⬜ not run | — |
 | 4 | [Finite-sample bias](#experiment-4--finite-sample-bias) | ⬜ not run | — |
 | 5 | [Empirical coverage of asymptotic CIs](#experiment-5--empirical-coverage-of-asymptotic-confidence-intervals) | ⬜ not run | — |
@@ -170,53 +170,119 @@ QQ plots look qualitatively similar to Run A. Diagonal alignment improves with $
 
 ## Experiment 2 — Rate of convergence (variance scaling)
 
-**Purpose:** Confirm that $\widehat{\mathrm{II}}_n$ converges at rate $\sqrt{n}$. Empirical variance of $\widehat{\mathrm{II}}_n$ across replications, plotted against $1/n$, should be linear. The slope of that line estimates the asymptotic variance $\sigma^2$.
+**Purpose:** Confirm that $\widehat{\mathrm{II}}_n$ converges at rate $\sqrt{n}$. Empirical variance of $\widehat{\mathrm{II}}_n$ across $B=1000$ replications, plotted against $1/n$, should be linear with slope $\sigma^2$. The complementary plot of $n \cdot \widehat{\mathrm{Var}}$ vs $n$ should be flat.
 
 **Script:** `experiments/exp2_rate/exp2_rate.py`  
-**SLURM script:** `experiments/exp2_rate/exp2.slurm`
+**SLURM script:** `experiments/exp2_rate/exp2.sh`  
+**Notes:** `experiments/exp2_rate/notes.md`
 
 ### Run details
 
 | Field | Value |
 |-------|-------|
-| Date | |
-| Commit hash | |
-| Cluster job ID | |
-| Wall time used | |
+| Date | 2026-05-03 |
+| Commit hash | ce8d506 |
 
 ### Data generating process
 
+All $X \sim \mathcal{N}(0, I_{d_X})$, additive noise $\varepsilon \sim \mathcal{N}(0, \sigma_\varepsilon^2 I_{d_Y})$ independent of $X$.
+
 | Parameter | Value |
 |-----------|-------|
-| Distribution | |
-| Parameters | |
-| True II value (if known) | |
-| Replications $B$ | |
-| Sample sizes $n$ | |
-| Random seed | |
+| Distributions | D0–D9 (10 total) |
+| $d_X$ | 1, 2, 5 |
+| $d_Y$ | 3 (fixed) |
+| Noise level $\sigma_\varepsilon$ | 0.1, 0.5 |
+| Replications $B$ | 1000 for all $n$ |
+| Sample sizes $n$ | 100, 500, 1000, 5000 |
+| Random seed | $42 +$ `SLURM_ARRAY_TASK_ID` |
+| $k$ (nearest neighbours) | 1 |
+| Total SLURM tasks | 240 |
 
-### Results
+### Results — $\sigma_\varepsilon = 0.1$
 
-| $n$ | $\mathrm{Var}(\widehat{\mathrm{II}}_n)$ (empirical) | $1/n$ | Ratio $n \cdot \mathrm{Var}$ |
-|-----|------------------------------------------------------|-------|------------------------------|
-| | | | |
-| | | | |
-| | | | |
-| | | | |
+#### Plot A: $n \cdot \widehat{\mathrm{Var}}$ vs $n$
 
-**Estimated asymptotic variance $\hat{\sigma}^2$ (slope of linear fit):**
+- **$d_X \in \{1, 2\}$:** All distributions produce flat or near-flat traces — asymptotic plateau reached.
+- **$d_X = 5$:** D7 (logarithmic) and D8 (step) show declining trends (from ~0.30 down to ~0.10 by $n=5000$). This is a finite-sample effect: the plateau is not yet reached at these sample sizes for high-dimensional low-noise configurations. Not a violation of the rate — the Var vs $1/n$ fit remains excellent ($R^2 > 0.99$).
 
-**$R^2$ of linear fit:**
+#### Plot B: $\widehat{\mathrm{Var}}$ vs $1/n$ — all $R^2 \geq 0.98$
 
-**Observations:**
+| Distribution | $R^2$ at $d_X=1$ | $R^2$ at $d_X=2$ | $R^2$ at $d_X=5$ |
+|---|---|---|---|
+| D0 Independent | 0.9997 | 0.9991 | 0.9998 |
+| D1 Linear | 0.9997 | 0.9935 | 0.9848 |
+| D5 Cosine | 0.9998 | 0.9999 | 0.9955 |
+| D7 Logarithmic | 0.9999 | 0.9995 | 0.9993 |
 
-<!-- Is the plot linear? Does the ratio n·Var stabilize? Any curvature at small n? -->
+#### Estimated $\hat{\sigma}^2$ at $\sigma_\varepsilon = 0.1$
+
+| Distribution | $d_X=1$ | $d_X=2$ | $d_X=5$ |
+|---|---|---|---|
+| D0 Independent | 0.427 | 0.387 | 0.417 |
+| D1 Linear | 0.011 | 0.002 | 0.025 |
+| D2 Quadratic | 0.091 | 0.024 | 0.175 |
+| D3 Cubic | 0.156 | 0.039 | 0.125 |
+| D4 Sine | 0.025 | 0.013 | 0.048 |
+| D5 Cosine | 0.186 | 0.074 | 0.201 |
+| D6 Exponential | 0.060 | 0.017 | 0.050 |
+| D7 Logarithmic | 0.078 | 0.125 | 0.319 |
+| D8 Step | 0.119 | 0.104 | 0.181 |
+| D9 Parabolic | 0.095 | 0.021 | 0.148 |
+
+### Results — $\sigma_\varepsilon = 0.5$
+
+#### Plot A: $n \cdot \widehat{\mathrm{Var}}$ vs $n$
+
+Traces are markedly flatter than at $\sigma_\varepsilon = 0.1$ — high noise pushes all distributions toward the independence regime ($\mathrm{II} \to 1$), where the estimator converges fastest. The $d_X=5$ declining trend is largely absent.
+
+#### Plot B: $\widehat{\mathrm{Var}}$ vs $1/n$ — several $R^2 = 1.000$
+
+Several distributions achieve $R^2 = 1.000$ (D1, D2, D4, D9 at various $d_X$).
+
+#### Estimated $\hat{\sigma}^2$ at $\sigma_\varepsilon = 0.5$
+
+| Distribution | $d_X=1$ | $d_X=2$ | $d_X=5$ |
+|---|---|---|---|
+| D0 Independent | 0.401 | 0.436 | 0.397 |
+| D1 Linear | 0.178 | 0.142 | 0.129 |
+| D2 Quadratic | 0.341 | 0.260 | 0.266 |
+| D3 Cubic | 0.355 | 0.222 | 0.187 |
+| D4 Sine | 0.245 | 0.267 | 0.284 |
+| D5 Cosine | 0.423 | 0.406 | 0.414 |
+| D6 Exponential | 0.386 | 0.441 | 0.382 |
+| D7 Logarithmic | 0.398 | 0.443 | 0.412 |
+| D8 Step | 0.130 | 0.146 | 0.290 |
+| D9 Parabolic | 0.358 | 0.209 | 0.258 |
+
+High noise pushes D5, D6, D7 essentially to the independence level ($\hat{\sigma}^2 \approx 0.40$–$0.44$) — their functional signals are masked.
+
+### Observations
+
+- **$\sqrt{n}$ rate confirmed.** $R^2 \geq 0.98$ in all 60 (distribution, $d_X$, noise) combinations; $\geq 0.99$ in 57 of 60. The $1/n$ scaling law is unambiguous.
+- **D0 independent** has $\hat{\sigma}^2 \approx 0.40$–$0.44$ regardless of $d_X$ or $\sigma_\varepsilon$ — consistent with a distribution-free limiting variance when $\mathrm{II} = 1$.
+- **D1 linear** has the smallest $\hat{\sigma}^2$ at low noise (as low as 0.002) — a strong, clean signal yields a very stable estimator.
+- **D7 logarithmic** $\hat{\sigma}^2$ grows sharply with $d_X$ at low noise (0.078 → 0.319), reflecting that the log signal grows more slowly with dimension than the Euclidean distance.
+- **D5 cosine** has consistently elevated $\hat{\sigma}^2$ — oscillatory structure creates ambiguous rank structure.
+- **High noise homogenises $\hat{\sigma}^2$:** at $\sigma_\varepsilon = 0.5$ most distributions cluster in a narrower band, approaching the independence variance.
 
 ### Output files
 
-- `experiments/exp2_rate/results/`
+| File | Description |
+|------|-------------|
+| `experiments/exp2_rate/plots/exp2_n_times_var_noise0-1.pdf` | Plot A — $n \cdot \widehat{\mathrm{Var}}$ vs $n$, $\sigma_\varepsilon = 0.1$ |
+| `experiments/exp2_rate/plots/exp2_n_times_var_noise0-5.pdf` | Plot A — $n \cdot \widehat{\mathrm{Var}}$ vs $n$, $\sigma_\varepsilon = 0.5$ |
+| `experiments/exp2_rate/plots/exp2_var_vs_invn_noise0-1.pdf` | Plot B — $\widehat{\mathrm{Var}}$ vs $1/n$, $\sigma_\varepsilon = 0.1$ |
+| `experiments/exp2_rate/plots/exp2_var_vs_invn_noise0-5.pdf` | Plot B — $\widehat{\mathrm{Var}}$ vs $1/n$, $\sigma_\varepsilon = 0.5$ |
+| `experiments/exp2_rate/plots/exp2_sigma2_table.csv` | $\hat{\sigma}^2$ estimates for all 60 combinations |
+| `experiments/exp2_rate/plots/exp2_sigma2_table.tex` | Same table, LaTeX format |
+| `experiments/exp2_rate/results/*.pkl` | Raw II values, empirical variance, $n \cdot \mathrm{Var}$ per task |
 
 ### Flags / follow-up
+
+- **Finite-sample effect at $d_X=5$, $\sigma_\varepsilon=0.1$** (D7, D8): $n \cdot \widehat{\mathrm{Var}}$ still declining at $n=5000$. Plateau not confirmed — follow-up at $n \in \{10000, 50000\}$ recommended before finalising the dissertation table.
+- **$\hat{\sigma}^2$ has no closed form:** all estimates are empirical; a theoretical derivation via Hájek projection is planned future work (see Setup.md §9).
+- **Only $k=1$ tested:** rate experiment should be repeated at $k \in \{3, 5\}$ before claiming the result holds generally.
 
 ---
 
@@ -485,6 +551,6 @@ Record any global defaults here so they are documented in one place.
 
 ---
 
-*Last updated:*
+*Last updated: 2026-05-03 — Experiment 2 complete.*
 
 

@@ -33,7 +33,7 @@ For each observation $i$, find the index of the point closest to it in $X$-space
 
 **Step 2 — Rank in $Y$-space:**
 
-$$R^Y_i(N_X(i)) = \sum_{j \neq i} \mathbf{1}_\left\lbrace \lVert y_{N_X(i)} - y_i \rVert \geq \lVert y_j - y_i \rVert \right\rbrace$$
+$$R^Y_i(N_X(i)) = \sum_{j \neq i} \mathbf{1}\left\lbrace \lVert y_{N_X(i)} - y_i \rVert \geq \lVert y_j - y_i \rVert \right\rbrace$$
 
 For each $i$, find the rank of $y_{N_X(i)}$ — the $Y$-value of $i$'s nearest $X$-neighbour — when all other $y_j$ are sorted by distance from $y_i$. A rank of 1 means the $X$-neighbour is also the $Y$-neighbour: $X$ is highly predictive of $Y$. A rank near $n$ means the $X$-neighbour lands far away in $Y$-space: $X$ carries little information about $Y$.
 
@@ -154,7 +154,7 @@ The choice of two noise levels is deliberate: with $\sigma_\varepsilon = 0.1$ th
 
 $$D_n = \sup_z \left| F_n(z) - \Phi(z) \right|$$
 
-where $F_n$ is the empirical CDF of the $B$ standardised statistics and $\Phi$ is the standard normal CDF. Under $H_0: Z_n \sim \mathcal{N}(0,1)$, $D_n \sqrt{B} \xrightarrow{d} $ Kolmogorov distribution. A large $p$-value means we fail to reject normality.
+where $F_n$ is the empirical CDF of the $B$ standardised statistics and $\Phi$ is the standard normal CDF. Under $H_0: Z_n \sim \mathcal{N}(0,1)$, $D_n \sqrt{B} \xrightarrow{d} \mathcal{K}$ where $\mathcal{K}$ denotes the Kolmogorov distribution. A large $p$-value means we fail to reject normality.
 
 **Why include a formal test:** QQ plots and histograms are visual and subject to interpretation. The KS test gives a single number — the $p$-value — that is objective, reproducible, and directly citable. In the dissertation you can write: "At every $(n, \text{distribution})$ combination tested, the KS test failed to reject normality at the 5% level" and point to Table X.
 
