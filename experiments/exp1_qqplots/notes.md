@@ -154,7 +154,7 @@ The choice of two noise levels is deliberate: with $\sigma_\varepsilon = 0.1$ th
 
 $$D\_n = \sup\_z \left| F\_n(z) - \Phi(z) \right|$$
 
-where $F_n$ is the empirical CDF of the $B$ standardised statistics and $\Phi$ is the standard normal CDF. Under $H_0: Z_n \sim \mathcal{N}(0,1)$, $D_n \sqrt{B} \xrightarrow{d} $ Kolmogorov distribution. A large $p$-value means we fail to reject normality.
+where $F_n$ is the empirical CDF of the $B$ standardised statistics and $\Phi$ is the standard normal CDF. Under $H_0: Z_n \sim \mathcal{N}(0,1)$, $D\_n \sqrt{B} \xrightarrow{d}$ Kolmogorov distribution. A large $p$-value means we fail to reject normality.
 
 **Why include a formal test:** QQ plots and histograms are visual and subject to interpretation. The KS test gives a single number — the $p$-value — that is objective, reproducible, and directly citable. In the dissertation you can write: "At every $(n, \text{distribution})$ combination tested, the KS test failed to reject normality at the 5% level" and point to Table X.
 

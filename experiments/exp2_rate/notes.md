@@ -148,18 +148,7 @@ For logarithmic and step-function relationships at $d_X = 5$ and low noise, the 
 
 ---
 
-## 8. How to cite in the dissertation
-
-This experiment constitutes empirical evidence for the scaling half of the CLT. In the dissertation:
-
-> "To verify that $\widehat{\mathrm{II}}_n$ achieves the parametric $\sqrt{n}$ convergence rate, we conducted a Monte Carlo study over 240 parameter configurations (10 data-generating processes, 4 sample sizes, 3 input dimensions, 2 noise levels, $B = 1000$ replications each). The empirical variance $\widehat{\mathrm{Var}}(\widehat{\mathrm{II}}_n)$ was regressed against $1/n$; the resulting fits achieve $R^2 \geq 0.98$ in all 60 (distribution, $d_X$, noise) combinations, confirming the $1/n$ scaling law. Slope estimates $\hat{\sigma}^2$ are reported in Table~\ref{tab:sigma2}. A finite-sample departure from the asymptotic plateau is observed for $d_X = 5$ under low noise for two distributions (D7, D8); this is discussed in Section~\ref{sec:finite_sample}."
-
-Corresponding figures: `exp2_var_vs_invn_noise*.pdf` (Plot B), `exp2_n_times_var_noise*.pdf` (Plot A).
-Table source: `exp2_sigma2_table.csv` / `exp2_sigma2_table.tex`.
-
----
-
-## 9. Limitations
+## 8. Limitations
 
 - **No closed-form $\sigma^2$:** Estimates are purely empirical. A theoretical expression for $\sigma^2$ as a function of the DGP would require computing the limiting variance of a Hájek projection — currently listed as future work.
 - **Only $k=1$ tested:** The $\sqrt{n}$ rate is demonstrated only for the 1-nearest-neighbour estimator. It is plausible but not shown here that the rate holds for $k > 1$.
