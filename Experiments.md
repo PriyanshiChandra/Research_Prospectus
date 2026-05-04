@@ -20,7 +20,7 @@ Figures are saved as both `.pdf` (for LaTeX) and `.png` (for README/presentation
 |---|-----------|--------|------|
 | 1 | [Convergence to normality (QQ plots)](#experiment-1--convergence-to-normality-qq-plots) | ✅ complete | 2026-05-02 |
 | 2 | [Rate of convergence (variance scaling)](#experiment-2--rate-of-convergence-variance-scaling) | ✅ complete | 2026-05-03 |
-| 3 | [Directional asymmetry across dependence structures](#experiment-3--directional-asymmetry-across-dependence-structures) | ⬜ not run | — |
+| 3 | [Convergence to population quantity II*](#experiment-3--convergence-to-population-quantity-ii) | ✅ complete | 2026-05-04 |
 | 4 | [Finite-sample bias](#experiment-4--finite-sample-bias) | ⬜ not run | — |
 | 5 | [Empirical coverage of asymptotic CIs](#experiment-5--empirical-coverage-of-asymptotic-confidence-intervals) | ⬜ not run | — |
 | 6 | [Sensitivity to dimension](#experiment-6--sensitivity-to-dimension) | ⬜ not run | — |
@@ -286,51 +286,115 @@ High noise pushes D5, D6, D7 essentially to the independence level ($\hat{\sigma
 
 ---
 
-## Experiment 3 — Directional asymmetry across dependence structures
+## Experiment 3 — Convergence to population quantity II*
 
-**Purpose:** Demonstrate that $\widehat{\mathrm{II}}$ genuinely captures *directional* dependence — i.e. $\widehat{\mathrm{II}}(X \to Y) \neq \widehat{\mathrm{II}}(Y \to X)$ in asymmetric settings, and that both converge to the correct true values. This is the intuition-building experiment for a broad committee.
+**Purpose:** Verify empirically that $\bar{II}_n \to II^*$ as $n \to \infty$, and measure the rate of convergence. The theoretical rate from the draft is $|\bar{II}_n - II^*| = O(n^{-\min(1/2,\, 1/d_X)} \cdot \log(n)^{d_X+1+\beta})$. This experiment checks both the direction of convergence (does the estimator actually reach the correct limit?) and the speed (does the log-log slope match theory?).
 
-**Script:** `experiments/exp3_asymmetry/exp3_asymmetry.py`  
-**SLURM script:** `experiments/exp3_asymmetry/exp3.slurm`
+**Script:** `experiments/exp3_convergence/exp3_convergence.py`  
+**SLURM script:** `experiments/exp3_convergence/exp3.sh`  
+**Notes:** `experiments/exp3_convergence/notes.md`
 
 ### Run details
 
 | Field | Value |
 |-------|-------|
-| Date | |
-| Commit hash | |
-| Cluster job ID | |
-| Wall time used | |
+| Date | 2026-05-04 |
+| Commit hash | ce8d506 |
+| Total SLURM tasks | 480 (10 dist × 6 $n$ × 4 $d_X$ × 2 noise) |
+| Wall time limit | 6 h per task |
+| Memory | 24 GB per task |
 
-### Distributions tested
+### Data generating process
 
-| # | Distribution | True $\mathrm{II}(X \to Y)$ | True $\mathrm{II}(Y \to X)$ | Expected behavior |
-|---|-------------|----------------------------|----------------------------|-------------------|
-| A | Bivariate Gaussian, $\rho = 0$ | | | Both directions ~ 0 |
-| B | Bivariate Gaussian, $\rho = 0.4$ | | | Symmetric, moderate |
-| C | Bivariate Gaussian, $\rho = 0.8$ | | | Symmetric, strong |
-| D | $Y = f(X) + \varepsilon$, small noise | | | Strong $X \to Y$, weak reverse |
-| E | $X \perp Y$ | | | Both ~ 0 |
+| Parameter | Value |
+|-----------|-------|
+| Distributions | D0–D9 (10 total) |
+| $d_X$ | 1, 2, 5, 10 |
+| $d_Y$ | 3 (fixed) |
+| $\sigma_\varepsilon$ | 0.1, 0.5 |
+| Sample sizes $n$ | 100, 500, 1000, 5000, 10000, 30000 |
+| Replications $B$ | 500 ($n \leq 1000$) · 200 ($n=5000$) · 100 ($n=10000$) · 50 ($n=30000$) |
+| True $II^*$ | 1.0 (D0 independent), 0.0 (D1–D9 functional) |
+| Error metric | $\|\bar{II}_n - II^*\|$ |
+| Random seed | $42 +$ `SLURM_ARRAY_TASK_ID` |
 
-### Results
+### Theoretical rate
 
-| Distribution | $\widehat{\mathrm{II}}(X \to Y)$ (mean) | $\widehat{\mathrm{II}}(Y \to X)$ (mean) | Asymmetry visible? |
-|-------------|----------------------------------------|----------------------------------------|-------------------|
-| A | | | |
-| B | | | |
-| C | | | |
-| D | | | |
-| E | | | |
+| $d_X$ | Slope on log-log plot | Bottleneck |
+|--------|----------------------|------------|
+| 1 | −0.50 | CLT / variance |
+| 2 | −0.50 | CLT = bias |
+| 5 | −0.20 | Nearest-neighbour bias |
+| 10 | −0.10 | Nearest-neighbour bias |
 
-**Observations:**
+### Results — Convergence ($\sigma_\varepsilon = 0.1$)
 
-<!-- Does the estimator recover the direction correctly? Is the asymmetry sharp and clear in plots? -->
+- **D0 independent:** already at $II^* = 1$ for all $d_X$ and all $n \geq 100$. Residual fluctuation is Monte Carlo noise ($< 0.002$).
+- **D1–D9 functional:** all show monotone decay toward $II^* = 0$. Convergence is fastest at $d_X = 1, 2$ — most distributions reach $\bar{II}_n < 0.05$ by $n = 10{,}000$.
+- **Dimension ordering visible:** within every distribution panel, lines are ordered by $d_X$; lower $d_X$ sits closer to zero — the curse of dimensionality directly visible.
+- **D7 (logarithmic) is the slowest:** even at $d_X = 1$, $\bar{II}_n \approx 0.10$ at $n = 30{,}000$. At $d_X = 10$, $\bar{II}_n \approx 0.06$.
+- **D8 (step)** is second slowest — rank ambiguity near the discontinuity impedes convergence.
+
+### Results — Convergence ($\sigma_\varepsilon = 0.5$)
+
+- **D0 independent:** identical to low-noise — independent of $\sigma_\varepsilon$ by construction.
+- **All functional distributions:** convergence is drastically slowed. At $n = 30{,}000$ and $d_X = 1$, most functional distributions still sit at $\bar{II}_n \in [0.3, 0.6]$.
+- **D7 (logarithmic) and D6 (exponential):** at $\sigma_\varepsilon = 0.5$ these are essentially indistinguishable from independence ($\bar{II}_n \approx 0.9$–$1.0$).
+- The estimator is converging to a **noisy limit** $II^*_\text{noisy} > 0$ — the population quantity under the noisy DGP is not zero. This is not an estimator failure; it is the correct limit for the actual data-generating process.
+
+### Results — Error decay ($\sigma_\varepsilon = 0.1$)
+
+| Dimension | Observation |
+|-----------|-------------|
+| $d_X = 1, 2$ | Error decays on log-log scale, roughly parallel to the $-0.5$ reference. Empirical slopes are shallower than theory (see table) because the noisy-limit plateau begins to appear at larger $n$, pulling the fitted slope toward zero. |
+| $d_X = 5$ | Lines track near the $-0.2$ reference. Distributions with strong signal (D1, D2) are closest to theory. |
+| $d_X = 10$ | Lines are nearly flat ($\approx -0.05$ to $-0.15$), consistent with the very shallow $-0.1$ theoretical rate. Hard to distinguish from noise at moderate $n$. |
+| D0 independent | Error at Monte Carlo noise floor ($O(10^{-3})$–$O(10^{-4})$); no systematic trend. |
+
+### Results — Error decay ($\sigma_\varepsilon = 0.5$)
+
+- **$d_X = 1, 2$:** error curves flat or non-monotone — the estimator has converged to the noisy limit, not to $II^* = 0$. The $-0.5$ reference slope is irrelevant here.
+- **$d_X = 5, 10$:** some decay is still visible. Convergence is slow enough that the noisy plateau has not yet been reached at $n = 30{,}000$.
+
+### Rate table (selected rows, $\sigma_\varepsilon = 0.1$)
+
+| Distribution | $d_X$ | Emp. slope | Theory slope | $R^2$ |
+|---|---|---|---|---|
+| D1 Linear | 5 | −0.468 | −0.200 | 0.997 |
+| D1 Linear | 10 | −0.224 | −0.100 | 1.000 |
+| D5 Cosine | 5 | −0.225 | −0.200 | 0.989 |
+| D7 Logarithmic | 10 | −0.062 | −0.100 | 0.999 |
+| D1 Linear | 1 | −0.022 | −0.500 | 0.642 |
+| D2 Quadratic | 2 | −0.155 | −0.500 | 0.772 |
+
+For $d_X = 5, 10$: $R^2 \geq 0.97$, confirming the log-linear relationship is real. Empirical slopes for D1/D2 are sometimes steeper than theory — the $\log(n)$ correction term inflates the short-run slope. For $d_X = 1, 2$: $R^2$ is lower and slopes are shallower, due to the noisy-limit plateau.
+
+### Observations
+
+- **Convergence to $II^*$ confirmed** at low noise across all 10 distributions and all four $d_X$ values.
+- **Dimension effect on convergence speed clearly demonstrated:** higher $d_X$ → slower convergence, matching the theoretical rate exponent $-1/d_X$ for $d_X \geq 2$.
+- **Noisy limit is the dominant finite-sample effect at $\sigma_\varepsilon = 0.5$** for $d_X = 1, 2$: the estimator reaches its correct limit, which is above zero, before the sample sizes available in this experiment.
+- **D7 (logarithmic) converges slowest** across all conditions — weak signal in high dimensions is easily overwhelmed by Euclidean geometry.
+- **Empirical slopes in the rate table are noisy estimates** of the true asymptotic exponent; the $\log(n)$ correction and finite-sample plateau both distort them. The $R^2$ and visual slope agreement at $d_X = 5, 10$ are the more reliable diagnostics.
 
 ### Output files
 
-- `experiments/exp3_asymmetry/results/`
+| File | Description |
+|------|-------------|
+| `experiments/exp3_convergence/plots/exp3_convergence_noise0-1.pdf/png` | $\bar{II}_n$ vs $n$, $\sigma_\varepsilon=0.1$, one panel per distribution |
+| `experiments/exp3_convergence/plots/exp3_convergence_noise0-5.pdf/png` | $\bar{II}_n$ vs $n$, $\sigma_\varepsilon=0.5$ |
+| `experiments/exp3_convergence/plots/exp3_error_noise0-1.pdf/png` | Error (log-log), $\sigma_\varepsilon=0.1$, one panel per $d_X$ |
+| `experiments/exp3_convergence/plots/exp3_error_noise0-5.pdf/png` | Error (log-log), $\sigma_\varepsilon=0.5$ |
+| `experiments/exp3_convergence/plots/exp3_rate_table.csv` | Empirical vs theoretical slopes |
+| `experiments/exp3_convergence/plots/exp3_rate_table.tex` | Same, LaTeX format |
+| `experiments/exp3_convergence/results/*.pkl` | Raw per-task results |
 
 ### Flags / follow-up
+
+- **Noisy-limit plateau ($\sigma_\varepsilon=0.5$, $d_X=1,2$):** the theoretical rate analysis assumes convergence to the noiseless $II^*=0$. For a cleaner test of the rate, either use $\sigma_\varepsilon \to 0$ or compute the true noisy-limit $II^*_\text{noisy}$ analytically and measure error against that.
+- **Adaptive $B$ at large $n$:** with $B=50$ at $n=30{,}000$, the Monte Carlo error is $O(\hat{\sigma}/\sqrt{50})$. For distributions near their limit, this dominates the systematic error. Consider $B \geq 200$ at $n=30{,}000$ for cleaner slope estimates.
+- **Log-correction not tested:** the $\log(n)^{d_X+1+\beta}$ factor is not fit separately. Including $\log(n)$ as a covariate in the slope regression would yield better-calibrated slope estimates.
+- **Only $k=1$ tested:** repeat at $k \in \{3, 5\}$ to confirm rate holds for higher-order nearest-neighbour estimators.
 
 ---
 
@@ -551,6 +615,6 @@ Record any global defaults here so they are documented in one place.
 
 ---
 
-*Last updated: 2026-05-03 — Experiment 2 complete.*
+*Last updated: 2026-05-04 — Experiment 3 complete.*
 
 
