@@ -256,38 +256,55 @@ def run_experiment(args: argparse.Namespace) -> None:
 # Plot helpers
 # ---------------------------------------------------------------------------
 
-def _qq_axis(ax: plt.Axes, z: np.ndarray, title: str = "") -> None:
+def _font_sizes(poster: bool) -> dict:
+    """Return a dict of font sizes scaled for paper or poster."""
+    if poster:
+        return dict(title=16, label=14, tick=12, suptitle=18, lw_ref=2.2, ms=8)
+    return dict(title=9,  label=8,  tick=7,  suptitle=12, lw_ref=1.4, ms=4)
+
+
+def _qq_axis(ax: plt.Axes, z: np.ndarray, title: str = "",
+             poster: bool = False) -> None:
     """Normal QQ plot on ax (Exp 3)."""
+    fs = _font_sizes(poster)
     n = len(z)
     p = (np.arange(1, n + 1) - 0.5) / n
     theoretical = norm_dist.ppf(p)
     empirical   = np.sort(z)
 
-    ax.scatter(theoretical, empirical, s=4, alpha=0.55, color="steelblue", zorder=3)
+    ax.scatter(theoretical, empirical, s=fs["ms"], alpha=0.55,
+               color="steelblue", zorder=3)
 
     lim = max(3.5, np.abs(empirical).max() * 1.05)
-    ax.plot([-lim, lim], [-lim, lim], color="crimson", lw=1.4, ls="--", zorder=2)
+    ax.plot([-lim, lim], [-lim, lim], color="crimson",
+            lw=fs["lw_ref"], ls="--", zorder=2)
     ax.set_xlim(-lim, lim)
     ax.set_ylim(-lim, lim)
-    ax.set_title(title, fontsize=9)
-    ax.set_xlabel("Theoretical $\\mathcal{N}(0,1)$ quantiles", fontsize=8)
-    ax.set_ylabel("Sample quantiles", fontsize=8)
-    ax.tick_params(labelsize=7)
+    ax.set_title(title, fontsize=fs["title"], fontweight="bold" if poster else "normal")
+    ax.set_xlabel("Theoretical $\\mathcal{N}(0,1)$ quantiles", fontsize=fs["label"],
+                  fontweight="bold" if poster else "normal")
+    ax.set_ylabel("Sample quantiles", fontsize=fs["label"],
+                  fontweight="bold" if poster else "normal")
+    ax.tick_params(labelsize=fs["tick"])
     ax.grid(alpha=0.25)
 
 
-def _hist_axis(ax: plt.Axes, z: np.ndarray, title: str = "") -> None:
+def _hist_axis(ax: plt.Axes, z: np.ndarray, title: str = "",
+               poster: bool = False) -> None:
     """Histogram + N(0,1) density overlay on ax (Exp 4)."""
+    fs = _font_sizes(poster)
     x_ref = np.linspace(-4.5, 4.5, 300)
     ax.hist(z, bins=40, density=True, alpha=0.55, color="steelblue",
             label="$Z_n$", zorder=2)
-    ax.plot(x_ref, norm_dist.pdf(x_ref), color="crimson", lw=1.6,
+    ax.plot(x_ref, norm_dist.pdf(x_ref), color="crimson", lw=fs["lw_ref"] + 0.2,
             label="$\\mathcal{N}(0,1)$", zorder=3)
     ax.set_xlim(-4.5, 4.5)
-    ax.set_title(title, fontsize=9)
-    ax.set_xlabel("$Z_n$", fontsize=8)
-    ax.set_ylabel("Density", fontsize=8)
-    ax.tick_params(labelsize=7)
+    ax.set_title(title, fontsize=fs["title"], fontweight="bold" if poster else "normal")
+    ax.set_xlabel("$Z_n$", fontsize=fs["label"],
+                  fontweight="bold" if poster else "normal")
+    ax.set_ylabel("Density", fontsize=fs["label"],
+                  fontweight="bold" if poster else "normal")
+    ax.tick_params(labelsize=fs["tick"])
     ax.grid(alpha=0.25)
 
 
@@ -310,12 +327,16 @@ def plot_qq_grid(
     plots_dir: str,
     n_values,  # type: List[int]
     distributions=PLOT_DISTRIBUTIONS,  # type: List[str]
+    poster: bool = False,
 ) -> None:
     """Experiment 3 — QQ plot grid: rows = distributions, cols = n."""
+    fs = _font_sizes(poster)
     nrows, ncols = len(distributions), len(n_values)
+    pw = 5.5 if poster else 3.8   # panel width
+    ph = 5.2 if poster else 3.6   # panel height
     fig, axes = plt.subplots(
         nrows, ncols,
-        figsize=(3.8 * ncols, 3.6 * nrows),
+        figsize=(pw * ncols, ph * nrows),
         squeeze=False,
     )
 
@@ -326,19 +347,21 @@ def plot_qq_grid(
             if key not in data:
                 ax.set_visible(False)
                 continue
-            label = f"{DIST_LABELS[dist]},  n = {n}"
-            _qq_axis(ax, data[key]["z_values"], title=label)
+            label = f"{DIST_LABELS[dist]},  $n = {n}$"
+            _qq_axis(ax, data[key]["z_values"], title=label, poster=poster)
 
     fig.suptitle(
-        "Exp 3 — QQ plots of $Z_n$ vs $\\mathcal{N}(0,1)$\n"
-        "(diagonal alignment improves with $n$)",
-        fontsize=12,
+        "QQ plots of $Z_n$ vs $\\mathcal{N}(0,1)$  —  "
+        "alignment improves with $n$",
+        fontsize=fs["suptitle"],
+        fontweight="bold" if poster else "normal",
     )
     plt.tight_layout(rect=[0, 0, 1, 0.96])
 
     os.makedirs(plots_dir, exist_ok=True)
+    suffix = "_poster" if poster else ""
     for ext in ("pdf", "png"):
-        out = os.path.join(plots_dir, f"exp3_qq_plots.{ext}")
+        out = os.path.join(plots_dir, f"exp3_qq_plots{suffix}.{ext}")
         fig.savefig(out, bbox_inches="tight", dpi=300)
         print(f"Saved: {out}")
     plt.close(fig)
@@ -349,12 +372,16 @@ def plot_histogram_grid(
     plots_dir: str,
     n_values,  # type: List[int]
     distributions=PLOT_DISTRIBUTIONS,  # type: List[str]
+    poster: bool = False,
 ) -> None:
     """Experiment 4 — histogram grid: rows = distributions, cols = n."""
+    fs = _font_sizes(poster)
     nrows, ncols = len(distributions), len(n_values)
+    pw = 5.5 if poster else 3.8
+    ph = 5.0 if poster else 3.4
     fig, axes = plt.subplots(
         nrows, ncols,
-        figsize=(3.8 * ncols, 3.4 * nrows),
+        figsize=(pw * ncols, ph * nrows),
         squeeze=False,
     )
 
@@ -365,8 +392,8 @@ def plot_histogram_grid(
             if key not in data:
                 ax.set_visible(False)
                 continue
-            label = f"{DIST_LABELS[dist]},  n = {n}"
-            _hist_axis(ax, data[key]["z_values"], title=label)
+            label = f"{DIST_LABELS[dist]},  $n = {n}$"
+            _hist_axis(ax, data[key]["z_values"], title=label, poster=poster)
 
     # Single legend from first non-empty axis
     for ax_row in axes:
@@ -374,21 +401,23 @@ def plot_histogram_grid(
             if ax.get_visible():
                 handles, labels = ax.get_legend_handles_labels()
                 fig.legend(handles, labels, loc="upper right",
-                           fontsize=9, framealpha=0.9)
+                           fontsize=fs["label"] + 1, framealpha=0.9)
                 break
         else:
             continue
         break
 
     fig.suptitle(
-        "Exp 4 — Histograms of $Z_n$ vs $\\mathcal{N}(0,1)$ density",
-        fontsize=12,
+        "Histograms of $Z_n$ vs $\\mathcal{N}(0,1)$ density",
+        fontsize=fs["suptitle"],
+        fontweight="bold" if poster else "normal",
     )
     plt.tight_layout(rect=[0, 0, 0.93, 0.96])
 
     os.makedirs(plots_dir, exist_ok=True)
+    suffix = "_poster" if poster else ""
     for ext in ("pdf", "png"):
-        out = os.path.join(plots_dir, f"exp4_histograms.{ext}")
+        out = os.path.join(plots_dir, f"exp4_histograms{suffix}.{ext}")
         fig.savefig(out, bbox_inches="tight", dpi=300)
         print(f"Saved: {out}")
     plt.close(fig)
@@ -442,10 +471,12 @@ def plot_mode(args: argparse.Namespace) -> None:
         return
 
     n_values = sorted({k[1] for k in data})
+    poster   = getattr(args, "poster", False)
     print(f"Loaded {len(data)} result files.  n values found: {n_values}")
+    print(f"Poster mode: {poster}")
 
-    plot_qq_grid(data, args.plots_dir, n_values)
-    plot_histogram_grid(data, args.plots_dir, n_values)
+    plot_qq_grid(data, args.plots_dir, n_values, poster=poster)
+    plot_histogram_grid(data, args.plots_dir, n_values, poster=poster)
     export_ks_table(data, args.plots_dir, n_values)
 
 
@@ -474,6 +505,8 @@ def main() -> None:
     # --- plot-mode arguments ------------------------------------------------
     parser.add_argument("--results_dir", type=str, default="results/")
     parser.add_argument("--plots_dir",   type=str, default="plots/")
+    parser.add_argument("--poster",      action="store_true",
+                        help="Use larger fonts/panels suitable for a poster.")
 
     args = parser.parse_args()
 
